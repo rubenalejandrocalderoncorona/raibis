@@ -1,12 +1,12 @@
 import React from 'react';
 import { Bot, Waves, Loader2 } from 'lucide-react';
 
-interface JarvisAvatarProps {
+interface RaibisAvatarProps {
   isProcessing?: boolean;
   isListening?: boolean;
 }
 
-export const JarvisAvatar: React.FC<JarvisAvatarProps> = ({ 
+export const RaibisAvatar: React.FC<RaibisAvatarProps> = ({ 
   isProcessing = false, 
   isListening = false 
 }) => {

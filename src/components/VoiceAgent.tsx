@@ -5,12 +5,12 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { ChatMessage } from './ChatMessage';
-import { JarvisAvatar } from './JarvisAvatar';
+import { RaibisAvatar } from './RaibisAvatar';
 
 interface Message {
   id: string;
   content: string;
-  sender: 'user' | 'jarvis';
+  sender: 'user' | 'raibis';
   timestamp: Date;
 }
 
@@ -26,8 +26,8 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hello, I'm Jarvis. How can I assist you today?",
-      sender: 'jarvis',
+      content: "Hello, I'm Raibis. How can I assist you today?",
+      sender: 'raibis',
       timestamp: new Date()
     }
   ]);
@@ -35,6 +35,7 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [inputMode, setInputMode] = useState<'voice' | 'text'>('voice');
+  const [responseMode, setResponseMode] = useState<'audio' | 'text'>('audio');
   const [textInput, setTextInput] = useState('');
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -114,19 +115,19 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({
 
       const data = await response.json();
       
-      // Add Jarvis response
-      const jarvisMessage: Message = {
+      // Add Raibis response
+      const raibisMessage: Message = {
         id: Date.now().toString(),
         content: data.response || "I'm processing your request. Please wait a moment.",
-        sender: 'jarvis',
+        sender: 'raibis',
         timestamp: new Date()
       };
       
-      setMessages(prev => [...prev, jarvisMessage]);
-      onMessage?.(jarvisMessage);
+      setMessages(prev => [...prev, raibisMessage]);
+      onMessage?.(raibisMessage);
 
-      // Optional: Use text-to-speech for Jarvis response (only for voice mode)
-      if (source === 'voice' && 'speechSynthesis' in window && data.response) {
+      // Optional: Use text-to-speech for Raibis response (only when audio response mode is enabled)
+      if (responseMode === 'audio' && 'speechSynthesis' in window && data.response) {
         const utterance = new SpeechSynthesisUtterance(data.response);
         utterance.voice = speechSynthesis.getVoices().find(voice => 
           voice.name.includes('Google') || voice.name.includes('Microsoft')
@@ -142,7 +143,7 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({
       const errorMessage: Message = {
         id: Date.now().toString(),
         content: "I'm experiencing some technical difficulties. Please check your connection and try again.",
-        sender: 'jarvis',
+        sender: 'raibis',
         timestamp: new Date()
       };
       
@@ -243,6 +244,11 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({
     }
   }, [inputMode, isRecording, stopRecording]);
 
+  // Toggle response mode
+  const toggleResponseMode = useCallback(() => {
+    setResponseMode(prev => prev === 'audio' ? 'text' : 'audio');
+  }, []);
+
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 relative overflow-hidden">
       {/* Background grid effect */}
@@ -251,19 +257,20 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({
       
       <div className="w-full max-w-2xl space-y-6 relative z-10">
         
-        {/* Jarvis Avatar and Title */}
+        {/* Raibis Avatar and Title */}
         <div className="text-center space-y-4">
-          <JarvisAvatar isProcessing={isProcessing} isListening={isListening} />
+          <RaibisAvatar isProcessing={isProcessing} isListening={isListening} />
           <div>
-            <h1 className="text-4xl font-bold text-glow mb-2 animate-fade-in">JARVIS</h1>
+            <h1 className="text-4xl font-bold text-glow mb-2 animate-fade-in">RAIBIS</h1>
             <p className="text-muted-foreground animate-slide-up">
               Your AI {inputMode === 'voice' ? 'Voice' : 'Text'} Assistant
             </p>
           </div>
         </div>
 
-        {/* Input Mode Toggle */}
-        <div className="flex justify-center">
+        {/* Control Toggles */}
+        <div className="flex justify-center space-x-4">
+          {/* Input Mode Toggle */}
           <Card className="card-gradient p-3">
             <Button
               onClick={toggleInputMode}
@@ -280,6 +287,29 @@ export const VoiceAgent: React.FC<VoiceAgentProps> = ({
                 <>
                   <MessageSquare className="w-4 h-4" />
                   <span>Text Mode</span>
+                  <ToggleLeft className="w-5 h-5 text-primary" />
+                </>
+              )}
+            </Button>
+          </Card>
+
+          {/* Response Mode Toggle */}
+          <Card className="card-gradient p-3">
+            <Button
+              onClick={toggleResponseMode}
+              variant="ghost"
+              className="flex items-center space-x-2 text-sm hover:bg-primary/10 transition-all duration-300"
+            >
+              {responseMode === 'audio' ? (
+                <>
+                  <Volume2 className="w-4 h-4" />
+                  <span>Audio Response</span>
+                  <ToggleRight className="w-5 h-5 text-primary" />
+                </>
+              ) : (
+                <>
+                  <MessageSquare className="w-4 h-4" />
+                  <span>Text Response</span>
                   <ToggleLeft className="w-5 h-5 text-primary" />
                 </>
               )}
